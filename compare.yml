@@ -1,0 +1,66 @@
+variables:
+- group: tacacs_accounts
+- group: ado-pat-git-pipeline
+- group: sw_creds
+
+
+parameters:
+- name: server_pool
+  displayName: choose pool
+  type: string
+  default: ITC-ITSD-NA-Ansible-UK
+  values:
+    - ITC-ITSD-NA-Ansible-UK
+    - ITC-ITSD-Ansible-UK
+    - ITC-ITSD-Ansible-SG
+
+- name: golden_config
+  displayName: choose_golden
+  type: string
+  default: golden
+  values:
+    - golden
+    - golden_test
+
+- name: sw_ip_server
+  displayName: choose Sw server
+  type: string
+  default: own
+  values:
+    - own
+    - us
+    - emea
+    - apac
+
+- name: sitename
+  displayName: sitename
+  default: None
+  type: string
+
+- name: IP_list
+  displayName: IP List
+  default: None
+  type: string
+
+- name: Own_File
+  displayName: Use own CSV file
+  default: None
+  type: string
+
+stages:
+
+- stage: 'script'
+  pool: ${{ parameters.server_pool }}
+  jobs:
+  - job: 'Run_the_script'
+    timeoutInMinutes: 0
+    steps:
+    #- script: pip3 install -r requirements.txt
+      #displayName: 'Install requirements'
+
+    - script: git clone https://system:$(System.AccessToken)@dev.azure.com/chevron/ITC-ITSD-AnsibleNetworkAzure/_git/python-network-testrepo-paei
+      displayName: "Clone paei cfg"
+
+    - script: python3 main.py $(ise_na_username) "$(ise_na_password)" ${{ parameters.golden_config }} $(sw_uname) "$(sw_password)" ${{ parameters.sw_ip_server }} $(us_npm_server) $(emea_npm_server) $(apac_npm_server) ${{ parameters.sitename }} ${{ parameters.IP_list }} ${{ parameters.Own_File }}
+      displayName: 'Run main.py'
+
